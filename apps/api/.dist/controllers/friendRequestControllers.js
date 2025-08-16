@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getFriends = exports.listPendingRequests = exports.updateFriendRequestStatus = exports.rejectFriendRequest = exports.acceptFriendRequest = exports.sendFriendRequest = void 0;
 const db_config_1 = __importDefault(require("../config/db.config"));
+const index_1 = require("../index");
 // Server error handler
 const handleError = (res, error, message = "Internal server error") => {
     console.error(error);
@@ -27,6 +28,12 @@ const sendFriendRequest = async (req, res) => {
         }
         const request = await db_config_1.default.friendRequests.create({
             data: { fromId: parsedFromId, toId: parsedToId, status: "PENDING" },
+        });
+        // Notify the recipient about the new friend request
+        index_1.io.to(toId.toString()).emit("friend-request-received", {
+            fromId,
+            requestId: request.id,
+            status: request.status,
         });
         return res.status(200).send({
             request,
@@ -79,13 +86,22 @@ const updateFriendRequestStatus = async (req, res) => {
         if (!["accepted", "rejected"].includes(status)) {
             return res.status(400).json({ error: "Invalid status" });
         }
-        const prismaStatus = status === "accepted" ? "ACCEPTED" : status === "rejected" ? "REJECTED" : undefined;
+        const prismaStatus = status === "accepted"
+            ? "ACCEPTED"
+            : status === "rejected"
+                ? "REJECTED"
+                : undefined;
         if (!prismaStatus) {
             return res.status(400).json({ error: "Invalid status" });
         }
         const updatedRequest = await db_config_1.default.friendRequests.update({
             where: { id: requestId },
             data: { status: prismaStatus },
+        });
+        // Notify the sender about the status update
+        index_1.io.to(updatedRequest.fromId.toString()).emit("friend-request-status", {
+            toId: updatedRequest.toId,
+            status,
         });
         res.json(updatedRequest);
     }
@@ -102,11 +118,11 @@ const listPendingRequests = async (req, res) => {
         const pendingRequests = await db_config_1.default.friendRequests.findMany({
             where: {
                 toId: parsedId,
-                status: "PENDING"
-            }
+                status: "PENDING",
+            },
         });
         return res.status(200).send({
-            pendingRequests
+            pendingRequests,
         });
     }
     catch (error) {

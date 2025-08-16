@@ -5,8 +5,17 @@ import rateLimiter from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import userRoute from "./routes/userRoutes"
 import friendRequestRoutes from "./routes/friendRequestRoutes";
+import { Socket, Server } from "socket.io";
+import { createServer } from "http";
+import { setupSocketIO } from "./socketSetup";
 
 const app = express();
+const server = createServer(app);
+const io = new Server(server, {
+  cors: { origin: "*" }
+});
+
+export { io };
 
 // middlewares
 app.use(express.json());
@@ -34,6 +43,9 @@ app.get("/health", (req: Request, res: Response) => {
 
 app.use("/api/users", userRoute);
 app.use("/api/friends", friendRequestRoutes);
-app.listen(PORT, () => {
+
+// Socket server
+setupSocketIO(io);
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

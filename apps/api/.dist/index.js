@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.io = void 0;
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const helmet_1 = __importDefault(require("helmet"));
@@ -10,7 +11,15 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const friendRequestRoutes_1 = __importDefault(require("./routes/friendRequestRoutes"));
+const socket_io_1 = require("socket.io");
+const http_1 = require("http");
+const socketSetup_1 = require("./socketSetup");
 const app = (0, express_1.default)();
+const server = (0, http_1.createServer)(app);
+const io = new socket_io_1.Server(server, {
+    cors: { origin: "*" }
+});
+exports.io = io;
 // middlewares
 app.use(express_1.default.json());
 app.use((0, cors_1.default)({
@@ -35,6 +44,8 @@ app.get("/health", (req, res) => {
 });
 app.use("/api/users", userRoutes_1.default);
 app.use("/api/friends", friendRequestRoutes_1.default);
-app.listen(PORT, () => {
+// Socket server
+(0, socketSetup_1.setupSocketIO)(io);
+server.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
