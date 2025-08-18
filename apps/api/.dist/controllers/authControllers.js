@@ -95,7 +95,7 @@ const userLogin = async (req, res) => {
             });
         }
         try {
-            const accessToken = generateAccessToken(user.id, user.email);
+            const accessToken = generateAccessToken(user.id, user.name, user.email);
             const refreshToken = generateRefreshToken(user.id);
             await db_config_1.default.users.update({
                 where: { id: user.id },
@@ -187,7 +187,7 @@ const refreshAccessToken = async (req, res) => {
                 message: "Refresh token is expired or used"
             });
         }
-        const newAccessToken = generateAccessToken(user.id, user.email);
+        const newAccessToken = generateAccessToken(user.id, user.name, user.email);
         const newRefreshToken = generateRefreshToken(user.id);
         await db_config_1.default.users.update({
             where: { id: user.id },
@@ -210,7 +210,7 @@ const refreshAccessToken = async (req, res) => {
 };
 exports.refreshAccessToken = refreshAccessToken;
 // Utility function to generate access token
-const generateAccessToken = (userId, email) => {
+const generateAccessToken = (userId, userName, email) => {
     if (!process.env.ACCESS_TOKEN_SECRET) {
         throw new Error("ACCESS_TOKEN_SECRET is not configured");
     }

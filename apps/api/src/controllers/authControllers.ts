@@ -99,7 +99,7 @@ export const userLogin = async(req: Request, res: Response) => {
     }
     
     try {
-      const accessToken = generateAccessToken(user.id, user.email);
+      const accessToken = generateAccessToken(user.id,user.name, user.email);
       const refreshToken = generateRefreshToken(user.id);
 
       await prisma.users.update({
@@ -203,7 +203,7 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
             });
         }
 
-        const newAccessToken = generateAccessToken(user.id, user.email);
+        const newAccessToken = generateAccessToken(user.id, user.name, user.email);
         const newRefreshToken = generateRefreshToken(user.id);
     
         await prisma.users.update({
@@ -228,7 +228,7 @@ export const refreshAccessToken = async (req: Request, res: Response) => {
 }
 
 // Utility function to generate access token
-const generateAccessToken = (userId: number, email: string): string => {
+const generateAccessToken = (userId: number, userName: string, email: string): string => {
   if (!process.env.ACCESS_TOKEN_SECRET) {
     throw new Error("ACCESS_TOKEN_SECRET is not configured");
   }

@@ -14,24 +14,24 @@ const handleError = (res, error, message = "Internal server error") => {
 // Send a friend request
 const sendFriendRequest = async (req, res) => {
     try {
-        const { toId } = req.body;
-        const fromId = req.user?.id;
+        const { receiverId } = req.body;
+        const senderId = req.user?.id;
         console.log(req.user);
         // Parse IDs to numbers
-        const parsedFromId = fromId ? Number(fromId) : undefined;
-        const parsedToId = toId ? Number(toId) : undefined;
-        if (!parsedFromId ||
-            !parsedToId ||
-            isNaN(parsedFromId) ||
-            isNaN(parsedToId)) {
+        const parsedSenderId = senderId ? Number(senderId) : undefined;
+        const parsedReceiverId = receiverId ? Number(receiverId) : undefined;
+        if (!parsedSenderId ||
+            !parsedReceiverId ||
+            isNaN(parsedSenderId) ||
+            isNaN(parsedReceiverId)) {
             return res.status(400).json({ error: "Invalid user IDs" });
         }
         const request = await db_config_1.default.friendRequests.create({
-            data: { fromId: parsedFromId, toId: parsedToId, status: "PENDING" },
+            data: { senderId: parsedSenderId, receiverId: parsedReceiverId, status: "PENDING" },
         });
         // Notify the recipient about the new friend request
-        index_1.io.to(toId.toString()).emit("friend-request-received", {
-            fromId,
+        index_1.io.to(parsedReceiverId.toString()).emit("friend-request-received", {
+            senderId: parsedSenderId,
             requestId: request.id,
             status: request.status,
         });
@@ -99,8 +99,8 @@ const updateFriendRequestStatus = async (req, res) => {
             data: { status: prismaStatus },
         });
         // Notify the sender about the status update
-        index_1.io.to(updatedRequest.fromId.toString()).emit("friend-request-status", {
-            toId: updatedRequest.toId,
+        index_1.io.to(updatedRequest.senderId.toString()).emit("friend-request-status", {
+            receiverId: updatedRequest.receiverId,
             status,
         });
         res.json(updatedRequest);
@@ -113,11 +113,11 @@ exports.updateFriendRequestStatus = updateFriendRequestStatus;
 // List pending requests
 const listPendingRequests = async (req, res) => {
     try {
-        const userId = req.user?.id;
-        const parsedId = userId ? Number(userId) : undefined;
+        const senderId = req.user?.id;
+        const parsedId = senderId ? Number(senderId) : undefined;
         const pendingRequests = await db_config_1.default.friendRequests.findMany({
             where: {
-                toId: parsedId,
+                receiverId: parsedId,
                 status: "PENDING",
             },
         });
@@ -133,13 +133,13 @@ exports.listPendingRequests = listPendingRequests;
 // Get friends (all accepted requests involving the user)
 const getFriends = async (req, res) => {
     try {
-        const userId = req.user?.id;
-        const parsedId = userId ? Number(userId) : undefined;
+        const senderId = req.user?.id;
+        const parsedId = senderId ? Number(senderId) : undefined;
         const friends = await db_config_1.default.friendRequests.findMany({
             where: {
                 OR: [
-                    { fromId: parsedId, status: "ACCEPTED" },
-                    { toId: parsedId, status: "ACCEPTED" },
+                    { senderId: parsedId, status: "ACCEPTED" },
+                    { receiverId: parsedId, status: "ACCEPTED" },
                 ],
             },
         });

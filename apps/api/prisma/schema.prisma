@@ -9,34 +9,93 @@ datasource db {
 }
 
 model users {
-  id         Int      @id @default(autoincrement())
-  name       String   @db.VarChar(191)
-  email      String   @unique @db.VarChar(191)
-  password   String
-  profile    String?
+  id           Int      @id @default(autoincrement())
+  name         String   @db.VarChar(191)
+  email        String   @unique @db.VarChar(191)
+  password     String
+  profile      String?
   refreshToken String?
-  created_at DateTime @default(now())
-  updated_at DateTime @default(now())
+  created_at   DateTime @default(now())
+  updated_at   DateTime @default(now())
 
+  // Friend request relations
   friendRequestsFrom friendRequests[] @relation("FriendRequestFrom")
   friendRequestsTo   friendRequests[] @relation("FriendRequestTo")
+  
+  // Conversation relations
+  conversationParticipants conversationParticipants[]
+  
+  // Message relations
+  messages messages[]
 }
 
-
 model friendRequests {
-  id        Int      @id @default(autoincrement())
-  fromId    Int
-  toId      Int
-  status    FriendRequestStatus @default(PENDING)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         Int                 @id @default(autoincrement())
+  senderId   Int
+  receiverId Int
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime            @default(now())
+  updatedAt  DateTime            @updatedAt
 
-  from      users    @relation("FriendRequestFrom", fields: [fromId], references: [id])
-  to        users    @relation("FriendRequestTo", fields: [toId], references: [id])
+  from users @relation("FriendRequestFrom", fields: [senderId], references: [id], onDelete: Cascade)
+  to   users @relation("FriendRequestTo", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  // Ensure no duplicate friend requests between same users
+  @@unique([senderId, receiverId])
 }
 
 enum FriendRequestStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+model conversations {
+  id        Int      @id @default(autoincrement())
+  name      String?  // Optional name for group conversations
+  isGroup   Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  participants conversationParticipants[]
+  messages     messages[]
+}
+
+model conversationParticipants {
+  id             Int      @id @default(autoincrement())
+  conversationId Int
+  userId         Int
+  joinedAt       DateTime @default(now())
+  role           ParticipantRole @default(MEMBER)
+
+  conversation conversations @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         users         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Ensure a user can only participate once in a conversation
+  @@unique([conversationId, userId])
+}
+
+enum ParticipantRole {
+  ADMIN
+  MEMBER
+}
+
+model messages {
+  id             Int           @id @default(autoincrement())
+  conversationId Int
+  senderId       Int
+  content        String
+  status         MessageStatus @default(SENT)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  conversation conversations @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender       users         @relation(fields: [senderId], references: [id], onDelete: Cascade)
+}
+
+enum MessageStatus {
+  SENT
+  DELIVERED
+  READ
 }

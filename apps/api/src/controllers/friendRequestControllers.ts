@@ -24,30 +24,30 @@ export const sendFriendRequest = async (
   res: Response
 ) => {
   try {
-    const { toId } = req.body;
-    const fromId = req.user?.id;
+    const { receiverId } = req.body;
+    const senderId = req.user?.id;
     console.log(req.user);
 
     // Parse IDs to numbers
-    const parsedFromId = fromId ? Number(fromId) : undefined;
-    const parsedToId = toId ? Number(toId) : undefined;
+    const parsedSenderId = senderId ? Number(senderId) : undefined;
+    const parsedReceiverId = receiverId ? Number(receiverId) : undefined;
 
     if (
-      !parsedFromId ||
-      !parsedToId ||
-      isNaN(parsedFromId) ||
-      isNaN(parsedToId)
+      !parsedSenderId ||
+      !parsedReceiverId ||
+      isNaN(parsedSenderId) ||
+      isNaN(parsedReceiverId)
     ) {
       return res.status(400).json({ error: "Invalid user IDs" });
     }
 
     const request = await prisma.friendRequests.create({
-      data: { fromId: parsedFromId, toId: parsedToId, status: "PENDING" },
+      data: { senderId: parsedSenderId, receiverId: parsedReceiverId, status: "PENDING" },
     });
 
     // Notify the recipient about the new friend request
-    io.to(toId.toString()).emit("friend-request-received", {
-      fromId,
+    io.to(parsedReceiverId.toString()).emit("friend-request-received", {
+      senderId: parsedSenderId,
       requestId: request.id,
       status: request.status,
     });
@@ -120,8 +120,8 @@ export const updateFriendRequestStatus = async (
     });
 
     // Notify the sender about the status update
-    io.to(updatedRequest.fromId.toString()).emit("friend-request-status", {
-      toId: updatedRequest.toId,
+    io.to(updatedRequest.senderId.toString()).emit("friend-request-status", {
+      receiverId: updatedRequest.receiverId,
       status,
     });
     res.json(updatedRequest);
@@ -136,11 +136,11 @@ export const listPendingRequests = async (
   res: Response
 ) => {
   try {
-    const userId = req.user?.id;
-    const parsedId = userId ? Number(userId) : undefined;
+    const senderId = req.user?.id;
+    const parsedId = senderId ? Number(senderId) : undefined;
     const pendingRequests = await prisma.friendRequests.findMany({
       where: {
-        toId: parsedId,
+        receiverId: parsedId,
         status: "PENDING",
       },
     });
@@ -155,13 +155,13 @@ export const listPendingRequests = async (
 // Get friends (all accepted requests involving the user)
 export const getFriends = async (req: AuthenticatedRequest, res: Response) => {
   try {
-    const userId = req.user?.id;
-    const parsedId = userId ? Number(userId) : undefined;
+    const senderId = req.user?.id;
+    const parsedId = senderId ? Number(senderId) : undefined;
     const friends = await prisma.friendRequests.findMany({
       where: {
         OR: [
-          { fromId: parsedId, status: "ACCEPTED" },
-          { toId: parsedId, status: "ACCEPTED" },
+          { senderId: parsedId, status: "ACCEPTED" },
+          { receiverId: parsedId, status: "ACCEPTED" },
         ],
       },
     });
