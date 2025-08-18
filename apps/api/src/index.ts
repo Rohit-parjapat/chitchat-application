@@ -5,6 +5,7 @@ import rateLimiter from "express-rate-limit";
 import cookieParser from "cookie-parser";
 import userRoute from "./routes/userRoutes"
 import friendRequestRoutes from "./routes/friendRequestRoutes";
+import messageRoutes from "./routes/messageRoutes";
 import { Socket, Server } from "socket.io";
 import { createServer } from "http";
 import { setupSocketIO } from "./socketSetup";
@@ -43,6 +44,7 @@ app.get("/health", (req: Request, res: Response) => {
 
 app.use("/api/users", userRoute);
 app.use("/api/friends", friendRequestRoutes);
+app.use("/api/messages", messageRoutes);
 
 // Socket server
 setupSocketIO(io);
