@@ -139,6 +139,25 @@ export const userLogin = async(req: Request, res: Response) => {
   }
 }
 
+// Get all Users
+export const getAllUsers = async (req: Request, res: Response) => {
+  try {
+    const users = await prisma.users.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        profile: true
+      }
+    });
+    return res.status(200).json(users);
+  } catch (error) {
+    return res.status(500).json({
+      message: "Internal Server Error"
+    });
+  }
+};
+
 // Logout function to clear cookies
 export const userLogout = async (req: Request, res: Response) => {
   try {

@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.refreshAccessToken = exports.userLogout = exports.userLogin = exports.userRegister = void 0;
+exports.refreshAccessToken = exports.userLogout = exports.getAllUsers = exports.userLogin = exports.userRegister = void 0;
 const validators_1 = require("../middlewares/validators");
 const joi_1 = require("joi");
 const db_config_1 = __importDefault(require("../config/db.config"));
@@ -134,6 +134,26 @@ const userLogin = async (req, res) => {
     }
 };
 exports.userLogin = userLogin;
+// Get all Users
+const getAllUsers = async (req, res) => {
+    try {
+        const users = await db_config_1.default.users.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                profile: true
+            }
+        });
+        return res.status(200).json(users);
+    }
+    catch (error) {
+        return res.status(500).json({
+            message: "Internal Server Error"
+        });
+    }
+};
+exports.getAllUsers = getAllUsers;
 // Logout function to clear cookies
 const userLogout = async (req, res) => {
     try {

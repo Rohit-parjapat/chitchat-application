@@ -11,6 +11,7 @@ const express_rate_limit_1 = __importDefault(require("express-rate-limit"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const userRoutes_1 = __importDefault(require("./routes/userRoutes"));
 const friendRequestRoutes_1 = __importDefault(require("./routes/friendRequestRoutes"));
+const messageRoutes_1 = __importDefault(require("./routes/messageRoutes"));
 const socket_io_1 = require("socket.io");
 const http_1 = require("http");
 const socketSetup_1 = require("./socketSetup");
@@ -44,6 +45,7 @@ app.get("/health", (req, res) => {
 });
 app.use("/api/users", userRoutes_1.default);
 app.use("/api/friends", friendRequestRoutes_1.default);
+app.use("/api/messages", messageRoutes_1.default);
 // Socket server
 (0, socketSetup_1.setupSocketIO)(io);
 server.listen(PORT, () => {
