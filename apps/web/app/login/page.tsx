@@ -1,6 +1,7 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import api from "@/lib/axios";
 
 export default function Login() {
   const router = useRouter();
@@ -11,28 +12,30 @@ export default function Login() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  useEffect(() => {
+    const checkCurrentUser = async () => {
+      try {
+        const res = await api.get("/users/me");
+        if (res.status === 200 && res.data) {
+          router.push("/dashboard");
+        }
+      } catch (err) {
+        // User not logged in, do nothing
+      }
+    };
+    checkCurrentUser();
+  }, [router]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // <-- Important: include cookies in requests
-        body: JSON.stringify(form),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.message || "Login failed.");
+      const res = await api.post("/users/login", form);
+      if (res.status !== 200) {
+        setError( res.data.message || "Login failed.");
         return;
       }
-
-      // No need to store token manually if using httpOnly cookies, but
-      // if you want to use accessToken from response body:
-      // const data = await res.json();
-      // localStorage.setItem("token", data.accessToken);
 
       // Redirect after successful login
       router.push("/dashboard");

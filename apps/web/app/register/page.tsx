@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import api from "@/lib/axios";
 
 export default function Register() {
   const router = useRouter();
@@ -16,15 +17,9 @@ export default function Register() {
     setError("");
 
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/users/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        setError(data.message || "Registration failed.");
+      const res = await api.post("/users/register", form);
+      if (res.status !== 201) {
+        setError(res.data.message || "Registration failed.");
         return;
       }
 

@@ -10,6 +10,6 @@ const router = express_1.default.Router();
 // Friend requests
 router.post("/request", authenticateUser_1.authenticateUser, friendRequestControllers_1.sendFriendRequest);
 router.get("/requests", authenticateUser_1.authenticateUser, friendRequestControllers_1.listPendingRequests);
-router.patch("/:id/respond", authenticateUser_1.authenticateUser, friendRequestControllers_1.updateFriendRequestStatus);
+router.patch("/requests/:id/respond", authenticateUser_1.authenticateUser, friendRequestControllers_1.updateFriendRequestStatus);
 router.get("/", authenticateUser_1.authenticateUser, friendRequestControllers_1.getFriends);
 exports.default = router;

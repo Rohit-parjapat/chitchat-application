@@ -94,6 +94,32 @@ const updateFriendRequestStatus = async (req, res) => {
         if (!prismaStatus) {
             return res.status(400).json({ error: "Invalid status" });
         }
+        if (prismaStatus === "ACCEPTED") {
+            try {
+                const friendRequest = await db_config_1.default.friendRequests.findUnique({ where: { id: requestId } });
+                if (!friendRequest) {
+                    return res.status(404).json({ error: "Request not found" });
+                }
+                // Parse IDs to numbers
+                const parsedSenderId = friendRequest.senderId ? Number(friendRequest.senderId) : undefined;
+                const parsedReceiverId = friendRequest.receiverId ? Number(friendRequest.receiverId) : undefined;
+                if (!parsedSenderId ||
+                    !parsedReceiverId ||
+                    isNaN(parsedSenderId) ||
+                    isNaN(parsedReceiverId)) {
+                    return res.status(400).json({ error: "Invalid user IDs" });
+                }
+                await db_config_1.default.friendRequests.create({
+                    data: { senderId: parsedReceiverId, receiverId: parsedSenderId, status: "ACCEPTED" },
+                });
+            }
+            catch (error) {
+                return res.status(500).json({ error: "Unable to create reciprocal friend request" });
+            }
+        }
+        else {
+            // If rejected, no need to create reciprocal request
+        }
         const updatedRequest = await db_config_1.default.friendRequests.update({
             where: { id: requestId },
             data: { status: prismaStatus },
@@ -118,8 +144,28 @@ const listPendingRequests = async (req, res) => {
         const pendingRequests = await db_config_1.default.friendRequests.findMany({
             where: {
                 receiverId: parsedId,
-                status: "PENDING",
+                status: {
+                    in: ["PENDING", "REJECTED"],
+                },
             },
+            include: {
+                from: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        profile: true,
+                    },
+                },
+                to: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        profile: true,
+                    },
+                },
+            }
         });
         return res.status(200).send({
             pendingRequests,
@@ -137,11 +183,27 @@ const getFriends = async (req, res) => {
         const parsedId = senderId ? Number(senderId) : undefined;
         const friends = await db_config_1.default.friendRequests.findMany({
             where: {
-                OR: [
-                    { senderId: parsedId, status: "ACCEPTED" },
-                    { receiverId: parsedId, status: "ACCEPTED" },
-                ],
+                senderId: parsedId,
+                status: "ACCEPTED"
             },
+            include: {
+                from: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        profile: true,
+                    },
+                },
+                to: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        profile: true,
+                    },
+                },
+            }
         });
         return res.status(200).send({
             friends,
