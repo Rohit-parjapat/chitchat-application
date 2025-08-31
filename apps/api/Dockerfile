@@ -40,9 +40,15 @@ WORKDIR /app
 RUN addgroup --system --gid 1001 expressjs
 RUN adduser --system --uid 1001 expressjs
 USER expressjs
-
+ENV PORT=5000
+ENV FRONTEND_URL="http://localhost:3000"
+ENV ACCESS_TOKEN_SECRET="78f82a45-8da4-40de-8d83-0040b7c396f8"
+ENV REFRESH_TOKEN_SECRET="a9b3c4d5-7e8f-4gh5-9i0j-1k2l3m4n5o6p"
+ENV ACCESS_TOKEN_EXPIRY="1h"
+ENV REFRESH_TOKEN_EXPIRY="7d"
+ENV REFRESH_TOKEN_EXPIRY="7d"
 ENV NODE_ENV=production
-ENV DATABASE_URL="postgresql://myuser:mypassword@localhost:5433/chitchat?schema=public"
+ENV DATABASE_URL="postgresql://myuser:mypassword@chitchat-db:5432/chitchat?schema=public"
 
 COPY --from=installer /app .
 

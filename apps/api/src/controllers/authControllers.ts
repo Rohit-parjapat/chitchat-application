@@ -65,6 +65,8 @@ export const userLogin = async (req: Request, res: Response) => {
       presence: "required",
     });
 
+    console.log("Login attempt for email:", email);
+
     const user = await prisma.users.findUnique({
       where: {
         email,

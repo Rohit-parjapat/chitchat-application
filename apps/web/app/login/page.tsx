@@ -39,8 +39,20 @@ export default function Login() {
 
       // Redirect after successful login
       router.push("/dashboard");
-    } catch {
-      setError("Something went wrong. Try again.");
+    } catch (error: any) {
+      if (error.response) {
+    // The server responded with a status code outside 2xx
+    setError(error.response.data?.message || error.response.statusText || "Login failed.");
+    console.error('Axios error response:', error.response.data, error.response.status, error.response.headers);
+  } else if (error.request) {
+    // The request was made but no response was received
+    setError("No response received from server.");
+    console.error('Axios error request:', error.request);
+  } else {
+    // Something happened in setting up the request
+    setError(error.message || "Something went wrong. Try again.");
+    console.error('Axios error message:', error.message);
+  }
     }
   };
 

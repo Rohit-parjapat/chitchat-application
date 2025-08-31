@@ -33,16 +33,14 @@ const ChatBox: React.FC<Props> = ({ chatId, userId }) => {
     });
   }, [chatId]);
 
-  const getConversation = async () => {
-    if (!chatId) return null;
-    const res = await api.get(`/messages/conversations/${chatId}`);
-    return res.data;
-  };
   useEffect(() => {
-    getConversation().then((data) => {
-      setConversation(data);
-    });
-  }, [chatId, getConversation]);
+    if (!chatId) return;
+    const getConversation = async () => {
+      const res = await api.get(`/messages/conversations/${chatId}`);
+      setConversation(res.data);
+    };
+    getConversation();
+  }, [chatId]);
 
   const receiverId = conversation?.participants.find(
     (participant) => participant.user.id !== userId
