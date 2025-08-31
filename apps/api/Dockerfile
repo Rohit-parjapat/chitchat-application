@@ -1,49 +1,49 @@
 FROM node:18-alpine AS base
 
-# The web Dockerfile is copy-pasted into our main docs at /docs/handbook/deploying-with-docker.
-# Make sure you update this Dockerfile, the Dockerfile in the web workspace and copy that over to Dockerfile in the docs.
+# Install system dependencies needed for Prisma + Postgres compatibility
+RUN apk update && apk add --no-cache \
+    ca-certificates \
+    openssl \
+    libpq \
+    libc6-compat \
+  && update-ca-certificates
 
 FROM base AS builder
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk update
-RUN apk add --no-cache libc6-compat
-# Set working directory
 WORKDIR /app
+
 RUN npm install -g pnpm
 COPY . .
+
 RUN pnpm add -w turbo@^2.5.5
 RUN pnpm exec turbo prune api --docker
 
-# Add lockfile and package.json's of isolated subworkspace
 FROM base AS installer
-RUN apk update
-RUN apk add --no-cache libc6-compat
 WORKDIR /app
+
 RUN npm install -g pnpm
 
-# First install dependencies (as they change less often)
 COPY --from=builder /app/out/json/ .
 RUN pnpm install
 
-# Build the project and its dependencies
 COPY --from=builder /app/out/full/ .
 
-# Uncomment and use build args to enable remote caching
-# ARG TURBO_TEAM
-# ENV TURBO_TEAM=$TURBO_TEAM
+# Set working directory to your Prisma workspace before generating client
+WORKDIR /app/apps/api
+RUN pnpm exec prisma generate
 
-# ARG TURBO_TOKEN
-# ENV TURBO_TOKEN=$TURBO_TOKEN
-
+WORKDIR /app
 RUN pnpm exec turbo build
 
 FROM base AS runner
 WORKDIR /app
 
-# Don't run production as root
 RUN addgroup --system --gid 1001 expressjs
 RUN adduser --system --uid 1001 expressjs
 USER expressjs
+
+ENV NODE_ENV=production
+ENV DATABASE_URL="postgresql://myuser:mypassword@localhost:5433/chitchat?schema=public"
+
 COPY --from=installer /app .
 
-CMD node apps/api/.dist/index.js
+CMD ["node", "apps/api/.dist/index.js"]

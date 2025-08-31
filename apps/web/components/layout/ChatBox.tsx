@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 "use client";
 import { useState, useEffect, useRef } from "react";
 
@@ -41,7 +42,7 @@ const ChatBox: React.FC<Props> = ({ chatId, userId }) => {
     getConversation().then((data) => {
       setConversation(data);
     });
-  }, [chatId]);
+  }, [chatId, getConversation]);
 
   const receiverId = conversation?.participants.find(
     (participant) => participant.user.id !== userId

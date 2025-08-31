@@ -1,7 +1,7 @@
 "use client"
 
 import { ColumnDef } from "@tanstack/react-table"
-import { Loader2Icon, MoreHorizontal } from "lucide-react"
+import { Loader2Icon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ArrowUpDown } from "lucide-react"
 import { IconCheck } from '@tabler/icons-react';

@@ -20,7 +20,7 @@ export default function Login() {
           router.push("/dashboard");
         }
       } catch (err) {
-        // User not logged in, do nothing
+        console.log("Not logged in", err);
       }
     };
     checkCurrentUser();
@@ -79,7 +79,7 @@ export default function Login() {
         </button>
       </form>
       <div className="mt-6 text-center">
-        <span className="text-gray-600">Don't have an account?</span>
+        <span className="text-gray-600">Don&apos;t have an account?</span>
         <button
           type="button"
           className="ml-2 text-green-600 hover:underline font-semibold cursor-pointer"

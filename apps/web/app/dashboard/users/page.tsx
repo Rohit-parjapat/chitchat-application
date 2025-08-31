@@ -4,11 +4,7 @@ import { columns, User } from "./columns";
 import { DataTable } from "@/components/ui/data-tables";
 import api from "@/lib/axios";
 
-interface Props {
-  currentUser: User | null;
-}
-
-const UserListingPage: React.FC<Props> = ({ currentUser }) => {
+const UserListingPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
    const [friendRequestStatus, setFriendRequestStatus] = useState<Record<string, "idle" | "loading" | "sent">>({});

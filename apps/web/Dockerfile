@@ -1,15 +1,14 @@
 FROM node:18-alpine AS base
 
-# This Dockerfile is copy-pasted into our main docs at /docs/handbook/deploying-with-docker.
-# Make sure you update both files!
-
 FROM base AS builder
-# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+
 RUN apk update
 RUN apk add --no-cache libc6-compat
 # Set working directory
 WORKDIR /app
 RUN npm install -g pnpm
+
+COPY apps/web/.env.production ./apps/web/.env.production
 COPY . .
 RUN pnpm add -w turbo@^2.5.5
 RUN pnpm exec turbo prune web --docker

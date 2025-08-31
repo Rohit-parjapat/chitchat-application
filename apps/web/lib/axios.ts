@@ -28,7 +28,7 @@ api.interceptors.response.use(
         );
 
         // 5. The server responds with new access token (could be set in another cookie)
-        const { accessToken } = res.data;
+  // const { accessToken } = res.data; // removed unused variable
 
         // 6. Optionally, set Authorization header for subsequent requests (if required)
         // api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;

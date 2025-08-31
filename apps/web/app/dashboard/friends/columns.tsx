@@ -58,8 +58,6 @@ export const columns = (onClick: (user: User) => void): ColumnDef<User>[] => [
     id: "actions",
     header: "Actions",
     cell: ({ row }) => {
-      const userId = row.original.id;
-      // const status = friendRequestStatus[userId] || "idle";
       const status = row.original.status || "idle";
 
       return (

@@ -185,7 +185,7 @@ export const getAllUsers = async (req: AuthenticatedRequest, res: Response) => {
       },
     });
 
-    const requestedUserIds = existingRequests.map((req) => req.receiverId);
+    const requestedUserIds = existingRequests.map((req: any) => req.receiverId);
 
     // Fetch all users except current user and those in requestedUserIds
     const availableUsers = await prisma.users.findMany({
